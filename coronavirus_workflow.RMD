@@ -33,5 +33,34 @@ library(magrittr)
 ```{r}
 coronavirus::coronavirus %>%
   glimpse()
+
+cv <- coronavirus::coronavirus;
+cv 
 ```
 
+# Country - China
+```{r}
+data(coronavirus)
+
+
+```
+
+#
+```{r}
+
+```
+
+#
+```{r}
+
+```
+
+#
+```{r}
+
+```
+
+#
+```{r}
+
+```
