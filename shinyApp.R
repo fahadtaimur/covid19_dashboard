@@ -15,7 +15,7 @@ library(leaflet)
 library(leafpop)
 library(purrr)
 
-setwd("C:/Users/taimu/Desktop/Courses/Analytics/Shiny_Advanced/coronavirus")
+
 source(file = "00_analysis/scripts.R")
 
 data <- get_data()
@@ -107,7 +107,26 @@ ui <- navbarPage(
         
       )
     
+    ),
+  
+  
+  # 3.0 Text Summary ----
+  div(
+    class = "container",
+    id = "summary",
+    column(
+      width = 12,
+      div(
+        class = "panel",
+        div(class = "panel-header", h4("Highlights")),
+        div(
+          class = "panel-body"
+          #textOutput(outputId = "analyst_commentary")
+        )
+      )
     )
+  )
+  
   ),
   
   # MAP Display ----
