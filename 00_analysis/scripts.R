@@ -156,3 +156,42 @@ map_object %>%
     options = layersControlOptions(collapsed = FALSE) 
   )
 }
+text_highlights <-
+function(data, country){
+  
+  # determine overall confirmed infections and deaths
+  global_outcomes <- data %>% 
+    dplyr::filter(date == date %>% tail(1)) %>%
+    select(Outcome = type, Cases = number_of_cases) %>%
+    mutate(row=row_number()) %>%
+    spread(key = Outcome, value = Cases) %>%
+    select(confirmed, deaths) %>%
+    summarise(total_confirmed = sum(confirmed, na.rm = T),
+              total_deaths = sum(deaths, na.rm = T)) %>%
+    mutate(Percentage = total_deaths/total_confirmed,
+           Percentage = Percentage %>% scales::percent(0.01)) %>%
+    mutate(total_confirmed = scales::comma(total_confirmed),
+           total_deaths = scales::comma(total_deaths)) 
+  
+  country_outcomes <- data %>% 
+    dplyr::filter(Country.Region == country) %>%
+    dplyr::filter(date == date %>% tail(1)) %>%
+    select(Outcome = type, Cases = number_of_cases) %>%
+    mutate(row=row_number()) %>%
+    spread(key = Outcome, value = Cases) %>%
+    select(confirmed, deaths) %>%
+    summarise(total_confirmed = sum(confirmed, na.rm = T),
+              total_deaths = sum(deaths, na.rm = T)) %>%
+    mutate(Percentage = total_deaths/total_confirmed,
+           Percentage = Percentage %>% scales::percent(0.01)) %>%
+    mutate(total_confirmed = scales::comma(total_confirmed),
+           total_deaths = scales::comma(total_deaths)) %>%
+    mutate(country = country)
+  
+  str_glue("On a global basis, there have been {global_outcomes$total_confirmed} confirmed cases of coronavirus infection. 
+           The number of deaths due to coronavirus are estimated at {global_outcomes$total_deaths}. On a percent basis, 
+           the death rate globally is {global_outcomes$Percentage}. 
+           
+           In the {country_outcomes$country}, the confirmed cases and deaths amount to {country_outcomes$total_confirmed} and {country_outcomes$total_deaths} respectively. The
+           mortality rate is {country_outcomes$Percentage}.")
+}

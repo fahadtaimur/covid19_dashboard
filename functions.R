@@ -44,8 +44,8 @@ plot_country_profile_ts <- function(data, country, outcome, date1, date2){
   
   ggplotly(
     data %>% 
-      filter(date %>% between(left = date1, right = date2)) %>%
-      filter(Country.Region == country, type == outcome) %>%
+      dplyr::filter(date %>% between(left = date1, right = date2)) %>%
+      dplyr::filter(Country.Region == country, type == outcome) %>%
       group_by(Country.Region, date) %>%
       summarise(total_cases = sum(number_of_cases)) %>%
       ungroup() %>%
@@ -105,8 +105,8 @@ total_cases_dt(data = data)
 # Plotting a map
 plot_map <- function(data, outcome = "confirmed"){
   data %>%
-    filter(date == today() - days(1)) %>%
-    filter(type == outcome) %>%
+    dplyr::filter(date == today() - days(1)) %>%
+    dplyr::filter(type == outcome) %>%
     group_by(Country.Region, Province.State, Lat, Long) %>%
     summarise(cases = sum(number_of_cases)) -> corona_summarized
   
@@ -133,8 +133,8 @@ plot_map(data = data)
 plotly_function <- function(data, country, outcome, date1, date2){
   # data modeling
   plot_df <- data %>% 
-    filter(date %>% between(left = date1, right = date2)) %>%
-    filter(Country.Region == country, type == outcome) %>%
+    dplyr::filter(date %>% between(left = date1, right = date2)) %>%
+    dplyr::filter(Country.Region == country, type == outcome) %>%
     group_by(Country.Region, date) %>%
     summarise(total_cases = sum(number_of_cases)) %>%
     ungroup()
@@ -161,8 +161,8 @@ plotly_function(data = data, country = "US", outcome = "confirmed", date1 = date
 leaflet_map_plot <- function(data){
 # wrangle data
 data_for_plot <- data %>% 
-  filter(date == date %>% tail(1)) %>%
-  dplyr::filter(number_of_cases > 0) %>% 
+  dplyr::filter(date == date %>% tail(1)) %>%
+  dplyr::dplyr::filter(number_of_cases > 0) %>% 
   dplyr::group_by(Country.Region, Province.State, Lat, Long, type) %>% 
   dplyr::summarise(cases = sum(number_of_cases)) %>% 
   dplyr::mutate(log_cases = 2 * log(cases)/ 2) %>% 
@@ -208,6 +208,51 @@ map_object %>%
 # Test
 leaflet_map_plot(data = data)
 
+data <- get_data()
+country <- "US"
+# Highlight Generation
+text_highlights <- function(data, country){
+  
+  # determine overall confirmed infections and deaths
+  global_outcomes <- data %>% 
+    dplyr::filter(date == date %>% tail(1)) %>%
+    select(Outcome = type, Cases = number_of_cases) %>%
+    mutate(row=row_number()) %>%
+    spread(key = Outcome, value = Cases) %>%
+    select(confirmed, deaths) %>%
+    summarise(total_confirmed = sum(confirmed, na.rm = T),
+              total_deaths = sum(deaths, na.rm = T)) %>%
+    mutate(Percentage = total_deaths/total_confirmed,
+           Percentage = Percentage %>% scales::percent(0.01)) %>%
+    mutate(total_confirmed = scales::comma(total_confirmed),
+           total_deaths = scales::comma(total_deaths)) 
+  
+  country_outcomes <- data %>% 
+    dplyr::filter(Country.Region == country) %>%
+    dplyr::filter(date == date %>% tail(1)) %>%
+    select(Outcome = type, Cases = number_of_cases) %>%
+    mutate(row=row_number()) %>%
+    spread(key = Outcome, value = Cases) %>%
+    select(confirmed, deaths) %>%
+    summarise(total_confirmed = sum(confirmed, na.rm = T),
+              total_deaths = sum(deaths, na.rm = T)) %>%
+    mutate(Percentage = total_deaths/total_confirmed,
+           Percentage = Percentage %>% scales::percent(0.01)) %>%
+    mutate(total_confirmed = scales::comma(total_confirmed),
+           total_deaths = scales::comma(total_deaths)) %>%
+    mutate(country = country)
+  
+  str_glue("On a global basis, there have been {global_outcomes$total_confirmed} confirmed cases of coronavirus infection. 
+           The number of deaths due to coronavirus are estimated at {global_outcomes$total_deaths}. On a percent basis, 
+           the death rate globally is {global_outcomes$Percentage}. 
+           
+           In the {country_outcomes$country}, the confirmed cases and deaths amount to {country_outcomes$total_confirmed} and {country_outcomes$total_deaths} respectively. The
+           mortality rate is {country_outcomes$Percentage}.")
+}
+
+# Test 
+text_highlights(data, country = "Pakistan")
+
 
 # Store the function
 dump(list = c("get_data", 
@@ -215,9 +260,11 @@ dump(list = c("get_data",
               "total_cases_dt", 
               "plot_map", 
               "plotly_function",
-              "leaflet_map_plot"), file = "00_analysis/scripts.R", append = FALSE)
+              "leaflet_map_plot",
+              "text_highlights"), file = "00_analysis/scripts.R", append = FALSE)
 
   
+
 
 
 

@@ -35,10 +35,14 @@ ui <- navbarPage(
   # 1.0 Header ----
   title = "Country Profile",
   
-  # 2.0 APPLICATION UI ----
+  # 2.0 UI APPLICATION ----
   # Selection filters
   div(
     class = "container",
+    
+    column(width = 12,
+           div(p(), br(), p())),
+    
     column(
       width = 4, 
       # wellPanel containing list of countries and action button
@@ -110,7 +114,7 @@ ui <- navbarPage(
     ),
   
   
-  # 3.0 Text Summary ----
+  # 3.0 UI Text Summary ----
   div(
     class = "container",
     id = "summary",
@@ -120,8 +124,9 @@ ui <- navbarPage(
         class = "panel",
         div(class = "panel-header", h4("Highlights")),
         div(
-          class = "panel-body"
-          #textOutput(outputId = "analyst_commentary")
+          class = "panel-body",
+          style = "color: #ffffff; background-color: #3e3f3a;",
+          textOutput(outputId = "text_gen")
         )
       )
     )
@@ -129,7 +134,7 @@ ui <- navbarPage(
   
   ),
   
-  # MAP Display ----
+  # 4.0 UI MAP Display ----
 
   tabPanel(
     title = "Map",
@@ -141,9 +146,10 @@ ui <- navbarPage(
 )
 
 
-# Define server logic required to draw a histogram
+# SERVER ----
 server <- function(input, output, session) {
   
+  # REACTIVITY ----
   
   # Event Reactive for Country Selected
   country_reactive <- eventReactive(eventExpr = input$analyze, {
@@ -167,6 +173,7 @@ server <- function(input, output, session) {
   }, ignoreNULL = FALSE)
   
   
+  # Time Series & Datatable ----
   # Use this country_reactive and outcome_reactive to reactively generate the plot
   output$plotly_plot <- renderPlotly({
     plotly_function(data, country = country_reactive(),
@@ -194,9 +201,14 @@ server <- function(input, output, session) {
                                scrollX = T))
   )
   
-  # Map
+  # Map ----
   output$map <- renderLeaflet({
     leaflet_map_plot(data = data)
+  })
+  
+  # Text Generation ----
+  output$text_gen <- renderText({
+    text_highlights(data = data, country = country_reactive())
   })
 
   
